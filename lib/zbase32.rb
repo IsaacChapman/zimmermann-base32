@@ -79,7 +79,6 @@ class ZBase32
       n = n + 1
       q = q + 5
     end
-    puts "ret: #{ret}"
     string =  ret.select{|x| x.class == Fixnum}.map{|x| x.chr }.join('')
     string[-1,1,''] if string[-1][0].ord == 0
     return string
