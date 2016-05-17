@@ -13,9 +13,9 @@ class ZBase32
       raise "There is no #{part}" unless part < 32
       ret = ret + @zbase32[part]
     end
-    return ret
+    ret
   end
-  
+
   def decode string
     join_string string.downcase.split('').map{ |s| @zB2N[s] }
   end
@@ -48,7 +48,7 @@ class ZBase32
       suboffset = suboffset - 4
       if suboffset >= 0
         if ((q + 5) > length)
-          part = 0 
+          part = 0
         else
           part = string[offset+1, 1][0].ord
         end
@@ -57,12 +57,12 @@ class ZBase32
       output.push chunk
       q = q + 5
     end
-    return output
+    output
   end
-  
+
   def join_string output
-    length = 5 * output.size
-    ret = Array.new((length / 8).to_i, 0)
+    length    = 5 * output.size
+    ret       = Array.new((length / 8.0).ceil, 0)
     part      = 0  ; chunk  = 0
     suboffset = 0  ; offset = 0
     n         = 0  ; q      = 0
@@ -73,14 +73,14 @@ class ZBase32
       chunk = (part << suboffset ) & @masks[suboffset]
       ret[offset] |= chunk
       suboffset = suboffset - 4
-      if suboffset >= 0 
+      if suboffset >= 0
         ret[offset+1] |= (part >> (4-suboffset) ) & @masks2[suboffset]
       end
       n = n + 1
       q = q + 5
     end
-    string =  ret.select{|x| x.class == Fixnum}.map{|x| x.chr }.join('')
-    string[-1,1,''] if string[-1][0].ord == 0
-    return string
+    string = ret.map(&:chr).join('')
+    string.chomp!("\0")
+    string
   end
 end
