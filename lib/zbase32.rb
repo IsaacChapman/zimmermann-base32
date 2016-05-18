@@ -1,39 +1,26 @@
-class ZBase32
-  def initialize
-    @zbase32 = %w( y b n d r f g 8 e j k m c p q x o t 1 u w i s z a 3 4 5 h 7 6 9 )
-    @masks   = [0x1f, 0x3e, 0x7c, 0xf8, 0xf0, 0xe0, 0xc0, 0x80]
-    @masks2  = [0x1, 0x3, 0x7, 0xf]
-    @zB2N = {}; q=0;
-    @zbase32.each { |z| @zB2N[z] = q; q+=1}
-  end
+module ZBase32
+  CHARSET = %w( y b n d r f g 8 e j k m c p q x o t 1 u w i s z a 3 4 5 h 7 6 9 ).freeze
+  MASKS   = [0x1f, 0x3e, 0x7c, 0xf8, 0xf0, 0xe0, 0xc0, 0x80].freeze
+  MASKS2  = [0x1, 0x3, 0x7, 0xf].freeze
+  ZB2N = CHARSET.each_with_index.inject({}) { |acc, (a, b)| acc[a] = b; acc }.freeze
 
-  def encode string
+  extend self
+
+  def encode(bytes)
     ret = ""
-    (split_string string).each do |part|
+    (split_string(bytes)).each do |part|
       raise "There is no #{part}" unless part < 32
-      ret = ret + @zbase32[part]
+      ret = ret + CHARSET[part]
     end
     ret
   end
 
-  def decode string
-    join_string string.downcase.split('').map{ |s| @zB2N[s] }
-  end
-
-  def self.random length
-    length = 5 if (length.is_a? String) && (length == "")
-    length = length.to_i
-    abort("You gave me wrong input. I'm upset.") unless length.is_a? Integer
-    zbase32 = %w( y b n d r f g 8 e j k m c p q x o t 1 u w i s z a 3 4 5 h 7 6 9 )
-    out = ''
-    while length > 0
-      out += zbase32.sort_by { rand }[0]
-      length -= 1
-    end
-    out
+  def decode(bytes)
+    join_string(bytes.downcase.split('').map { |s| ZB2N[s] })
   end
 
   private
+
   def split_string string
     output    = [] ; chunk  = 0
     part      = 0  ; offset = 0
@@ -44,7 +31,7 @@ class ZBase32
       offset = (q / 8).to_i
       suboffset = q % 8
       part = string[offset, 1][0].ord
-      chunk = (part & @masks[suboffset]) >> suboffset
+      chunk = (part & MASKS[suboffset]) >> suboffset
       suboffset = suboffset - 4
       if suboffset >= 0
         if ((q + 5) > length)
@@ -52,7 +39,7 @@ class ZBase32
         else
           part = string[offset+1, 1][0].ord
         end
-        chunk |= (part & @masks2[suboffset]) << (4 - suboffset)
+        chunk |= (part & MASKS2[suboffset]) << (4 - suboffset)
       end
       output.push chunk
       q = q + 5
@@ -70,11 +57,11 @@ class ZBase32
       offset = (q / 8).to_i
       suboffset = q % 8
       part = output[n]
-      chunk = (part << suboffset ) & @masks[suboffset]
+      chunk = (part << suboffset ) & MASKS[suboffset]
       ret[offset] |= chunk
       suboffset = suboffset - 4
       if suboffset >= 0
-        ret[offset+1] |= (part >> (4-suboffset) ) & @masks2[suboffset]
+        ret[offset+1] |= (part >> (4-suboffset) ) & MASKS2[suboffset]
       end
       n = n + 1
       q = q + 5
