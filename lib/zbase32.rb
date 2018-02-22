@@ -1,7 +1,21 @@
 module ZBase32
-  CHARSET = %w( y b n d r f g 8 e j k m c p q x o t 1 u w i s z a 3 4 5 h 7 6 9 ).freeze
+  def self.is_integer?(str)
+    true if Integer(str) rescue false
+  end
+
+  ALLOWED_CHARS = %w( y b n d r f g 8 e j k m c p q x o t 1 u w i s z a 3 4 5 h 7 6 9 ).freeze
   MASKS   = [0x1f, 0x3e, 0x7c, 0xf8, 0xf0, 0xe0, 0xc0, 0x80].freeze
   MASKS2  = [0x1, 0x3, 0x7, 0xf].freeze
+  SEED_ENV_VAR = "ZBASE32_SEED".freeze
+  if ENV[SEED_ENV_VAR].nil? then
+    seed = 1
+  elsif ! is_integer?(ENV[SEED_ENV_VAR]) then
+    $stderr.puts "NOTICE: '#{SEED_ENV_VAR}' environment variable is not an integer! Using '1' as seed."
+    seed = 1
+  else
+    seed = Integer(ENV[SEED_ENV_VAR])
+  end
+  CHARSET = ALLOWED_CHARS.shuffle(random: Random.new(seed)).freeze
   ZB2N = CHARSET.each_with_index.inject({}) { |acc, (a, b)| acc[a] = b; acc }.freeze
 
   extend self

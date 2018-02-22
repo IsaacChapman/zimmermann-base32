@@ -37,4 +37,5 @@ describe ZBase32 do
       end
     end
   end
+
 end
